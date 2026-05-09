@@ -5,6 +5,10 @@ database. Friends paste their LeetCode handle once and a daily GitHub Action
 keeps the standings current. Designed for a fixed-window competition (e.g. 3
 months).
 
+> Working on this codebase with an AI agent? See
+> [`AGENTS.md`](AGENTS.md) for full architecture, design rationale,
+> invariants, and gotchas.
+
 - **Score = (currentSolved − baselineSolved) × pointsPerDifficulty**, summed
   across Easy / Medium / Hard. Defaults: 1 / 3 / 5.
 - **Static frontend + serverless join/update endpoints**, all on Vercel's free
