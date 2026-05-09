@@ -40,7 +40,10 @@ function userMode(u) {
   return u.mode === "manual" ? "manual" : "auto";
 }
 
-function pointsForUser(u, { baseline, latest, manual, weights }) {
+function pointsForUser(u, { baseline, latest, manual, weights, hasStarted }) {
+  if (!hasStarted) {
+    return { delta: { easy: 0, medium: 0, hard: 0 }, points: 0, hasBaseline: false };
+  }
   if (userMode(u) === "manual") {
     const m = manual?.users?.[u.leetcode];
     if (!m) return null;
@@ -56,14 +59,26 @@ function pointsForUser(u, { baseline, latest, manual, weights }) {
   const b = baseline?.users?.[u.leetcode];
   const c = latest?.counts?.[u.leetcode];
   if (!c) return null;
-  const ref = b || { easy: 0, medium: 0, hard: 0 };
-  const dE = Math.max(0, (c.easy   ?? 0) - (ref.easy   ?? 0));
-  const dM = Math.max(0, (c.medium ?? 0) - (ref.medium ?? 0));
-  const dH = Math.max(0, (c.hard   ?? 0) - (ref.hard   ?? 0));
+  // Without a baseline, the user's delta is undefined: they either joined
+  // before the competition started (cron correctly skipped baseline), or they
+  // joined post-startDate and the cron hasn't yet set their baseline. In
+  // either case, show zero delta/points until the next cron tick locks in
+  // their starting count. Falling back to 0/0/0 here would credit them with
+  // their entire pre-competition LeetCode history, which is wrong.
+  if (!b) {
+    return {
+      delta: { easy: 0, medium: 0, hard: 0 },
+      points: 0,
+      hasBaseline: false,
+    };
+  }
+  const dE = Math.max(0, (c.easy   ?? 0) - (b.easy   ?? 0));
+  const dM = Math.max(0, (c.medium ?? 0) - (b.medium ?? 0));
+  const dH = Math.max(0, (c.hard   ?? 0) - (b.hard   ?? 0));
   return {
     delta: { easy: dE, medium: dM, hard: dH },
     points: dE * weights.easy + dM * weights.medium + dH * weights.hard,
-    hasBaseline: !!b,
+    hasBaseline: true,
   };
 }
 
@@ -204,6 +219,17 @@ function renderBoard(rows, latest, manual) {
   }
 }
 
+function renderStandingsHint(config) {
+  const today = new Date().toISOString().slice(0, 10);
+  const updated = $("#updated");
+  if (config.startDate && today < config.startDate) {
+    const fmt = new Date(config.startDate + "T00:00:00Z").toLocaleDateString(undefined, {
+      year: "numeric", month: "short", day: "numeric", timeZone: "UTC",
+    });
+    updated.textContent = `Scores start counting ${fmt}`;
+  }
+}
+
 // ----- chart -----
 
 const CHART_COLORS = [
@@ -215,7 +241,12 @@ function buildChart(config, baseline, timeline, users) {
   const canvas = $("#chart");
   const empty = $("#chart-empty");
   const w = config.points || { easy: 1, medium: 3, hard: 5 };
-  const points = timeline?.points || [];
+  const allPoints = timeline?.points || [];
+  // Drop pre-competition snapshots: their counts are full LeetCode history
+  // and would dwarf any actual competition progress.
+  const points = config.startDate
+    ? allPoints.filter((p) => (p.date || "") >= config.startDate)
+    : allPoints;
 
   if (points.length < 2) {
     empty.hidden = false;
@@ -235,9 +266,14 @@ function buildChart(config, baseline, timeline, users) {
         // and manual for others (mid-competition mode switch). Each
         // snapshot's `manual` array records who was manual at that time.
         const wasManualThen = Array.isArray(p.manual) && p.manual.includes(u.leetcode);
+        if (!wasManualThen && !base) {
+          // Auto user with no baseline yet — skip this point rather than
+          // crediting their entire pre-baseline history.
+          return null;
+        }
         const ref = wasManualThen
           ? { easy: 0, medium: 0, hard: 0 }
-          : (base || { easy: 0, medium: 0, hard: 0 });
+          : base;
         const dE = Math.max(0, (c.easy   ?? 0) - (ref.easy   ?? 0));
         const dM = Math.max(0, (c.medium ?? 0) - (ref.medium ?? 0));
         const dH = Math.max(0, (c.hard   ?? 0) - (ref.hard   ?? 0));
@@ -414,8 +450,11 @@ async function load() {
 
   const users = Array.isArray(config.users) ? config.users : [];
   const weights = config.points || { easy: 1, medium: 3, hard: 5 };
-  const rows = rankRows(users, { baseline, latest, manual, weights });
+  const today = new Date().toISOString().slice(0, 10);
+  const hasStarted = !config.startDate || today >= config.startDate;
+  const rows = rankRows(users, { baseline, latest, manual, weights, hasStarted });
   renderBoard(rows, latest, manual);
+  renderStandingsHint(config);
   buildChart(config, baseline, timeline, users);
 }
 
