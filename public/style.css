@@ -230,16 +230,27 @@ table.board tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
 }
 .chart-empty { margin-top: 12px; }
 
-/* ---------- join form ---------- */
+/* ---------- join + update forms ---------- */
 
-.join { padding-bottom: 22px; }
+.join, .update { padding-bottom: 22px; }
 .join-form {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr auto;
   gap: 10px;
   align-items: end;
 }
-.join-form label {
+.update-form {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.4fr auto;
+  gap: 10px;
+  align-items: end;
+}
+.update-help {
+  margin: -6px 0 12px;
+  font-size: 13px;
+}
+.join-form label,
+.update-form label {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -248,7 +259,8 @@ table.board tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
   text-transform: uppercase;
   color: var(--muted);
 }
-.join-form input {
+.join-form input,
+.update-form input {
   background: var(--card-2);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -259,12 +271,18 @@ table.board tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
   text-transform: none;
   letter-spacing: normal;
 }
-.join-form input:focus {
+.update-form .num-input input {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  text-align: right;
+}
+.join-form input:focus,
+.update-form input:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(255, 161, 22, 0.15);
 }
-.join-form button {
+.join-form button,
+.update-form button {
   background: var(--accent);
   color: #1a1106;
   border: none;
@@ -275,9 +293,12 @@ table.board tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
   cursor: pointer;
   transition: filter 120ms ease, transform 120ms ease;
 }
-.join-form button:hover:not(:disabled) { filter: brightness(1.07); }
-.join-form button:active:not(:disabled) { transform: translateY(1px); }
-.join-form button:disabled { opacity: 0.5; cursor: not-allowed; }
+.join-form button:hover:not(:disabled),
+.update-form button:hover:not(:disabled) { filter: brightness(1.07); }
+.join-form button:active:not(:disabled),
+.update-form button:active:not(:disabled) { transform: translateY(1px); }
+.join-form button:disabled,
+.update-form button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .form-msg {
   grid-column: 1 / -1;
@@ -287,6 +308,68 @@ table.board tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
 }
 .form-msg.ok  { color: var(--easy); }
 .form-msg.err { color: var(--hard); }
+
+/* mode toggle (radio cards) inside the join form */
+
+.mode-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  border: none;
+  padding: 4px 0 0;
+  margin: 0;
+}
+.mode-row legend {
+  padding: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.mode-opt {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  color: var(--text) !important;
+  font-size: 13px !important;
+}
+.mode-opt:has(input:checked) {
+  border-color: var(--accent);
+  background: rgba(255, 161, 22, 0.06);
+}
+.mode-opt input {
+  margin: 3px 0 0;
+  accent-color: var(--accent);
+}
+.mode-opt strong { display: block; font-size: 13px; }
+.mode-opt span   { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+/* manual tag inside the leaderboard */
+
+.tag {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  background: rgba(255, 161, 22, 0.12);
+  border: 1px solid rgba(255, 161, 22, 0.35);
+  border-radius: 999px;
+  padding: 1px 7px;
+  vertical-align: middle;
+}
 
 /* ---------- footer ---------- */
 
@@ -304,6 +387,11 @@ table.board tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
   .cd-cell { padding: 8px 10px; min-width: 56px; }
   .cd-cell span { font-size: 18px; }
   .join-form { grid-template-columns: 1fr; }
+  .update-form { grid-template-columns: 1fr 1fr 1fr; }
+  .update-form > label:first-of-type,
+  .update-form > label:nth-last-of-type(2) { grid-column: 1 / -1; }
+  .update-form button { grid-column: 1 / -1; width: 100%; padding: 12px; }
+  .mode-row { grid-template-columns: 1fr; }
   .join-form button { width: 100%; padding: 12px; }
   table.board th, table.board td { padding: 10px 6px; }
   table.board th.num, table.board td.num { font-size: 13px; }

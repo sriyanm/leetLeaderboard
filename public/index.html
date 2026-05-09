@@ -104,13 +104,83 @@
             />
           </label>
           <button id="f-submit" type="submit">Join</button>
+          <fieldset class="mode-row">
+            <legend>Tracking</legend>
+            <label class="mode-opt">
+              <input type="radio" name="mode" value="auto" checked />
+              <div>
+                <strong>Auto</strong>
+                <span>Pull stats from your LeetCode profile every day.</span>
+              </div>
+            </label>
+            <label class="mode-opt">
+              <input type="radio" name="mode" value="manual" />
+              <div>
+                <strong>Manual</strong>
+                <span>For shared accounts. Self-report your progress below.</span>
+              </div>
+            </label>
+          </fieldset>
           <p id="f-msg" class="form-msg" role="status" aria-live="polite"></p>
         </form>
       </section>
 
+      <section class="card update">
+        <div class="card-head">
+          <h2>Update my progress (manual)</h2>
+          <span class="muted">For users who chose manual tracking above</span>
+        </div>
+        <p class="update-help muted">
+          Enter the totals of <strong>problems you personally solved during the
+          competition</strong>. Numbers replace your previous submission, so
+          re-enter your full counts each time.
+        </p>
+        <form id="update-form" class="update-form" autocomplete="off">
+          <label>
+            <span>LeetCode username</span>
+            <input
+              id="u-handle"
+              name="leetcode"
+              type="text"
+              maxlength="40"
+              pattern="[A-Za-z0-9_-]{1,40}"
+              required
+              spellcheck="false"
+              autocapitalize="none"
+            />
+          </label>
+          <label class="num-input">
+            <span>Easy</span>
+            <input id="u-easy" name="easy" type="number" min="0" max="10000" step="1" value="0" required />
+          </label>
+          <label class="num-input">
+            <span>Medium</span>
+            <input id="u-medium" name="medium" type="number" min="0" max="10000" step="1" value="0" required />
+          </label>
+          <label class="num-input">
+            <span>Hard</span>
+            <input id="u-hard" name="hard" type="number" min="0" max="10000" step="1" value="0" required />
+          </label>
+          <label>
+            <span>Invite code</span>
+            <input
+              id="u-invite"
+              name="inviteCode"
+              type="password"
+              maxlength="200"
+              required
+              autocomplete="off"
+            />
+          </label>
+          <button id="u-submit" type="submit">Update</button>
+          <p id="u-msg" class="form-msg" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
       <footer class="foot muted">
-        Snapshots run daily at 07:00 UTC. New joiners start at 0 points and
-        their stats appear after the next snapshot.
+        Snapshots run daily at 07:00 UTC. Auto-tracked joiners start at 0
+        points and their stats appear after the next snapshot. Manual users
+        can update any time; their score updates immediately.
       </footer>
     </main>
 

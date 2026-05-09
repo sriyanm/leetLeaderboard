@@ -7,6 +7,10 @@
 //   public/data/index.json            - list of snapshot dates
 //   public/data/timeline.json         - combined per-day counts for the chart
 //
+// Users with `mode: "manual"` are skipped for the LeetCode fetch; their
+// values come from public/data/manual.json (written by /api/update) and
+// represent deltas during the competition rather than absolute totals.
+//
 // Run via `node scripts/fetch.mjs` or `npm run snapshot`.
 
 import fs from "node:fs/promises";
@@ -22,6 +26,7 @@ const BASELINE_PATH = path.join(DATA_DIR, "baseline.json");
 const LATEST_PATH = path.join(DATA_DIR, "latest.json");
 const INDEX_PATH = path.join(DATA_DIR, "index.json");
 const TIMELINE_PATH = path.join(DATA_DIR, "timeline.json");
+const MANUAL_PATH = path.join(DATA_DIR, "manual.json");
 
 const GRAPHQL = "https://leetcode.com/graphql/";
 const QUERY = `query getUserProfile($username: String!) {
@@ -91,11 +96,26 @@ async function main() {
     return;
   }
 
+  const manualData = (await readJson(MANUAL_PATH)) || { users: {} };
+  if (!manualData.users) manualData.users = {};
+
   const counts = {};
   const errors = {};
+  const manualHandles = new Set();
   for (const u of users) {
     const handle = u.leetcode;
     if (!handle) continue;
+    if (u.mode === "manual") {
+      manualHandles.add(handle);
+      const m = manualData.users[handle];
+      if (m) {
+        counts[handle] = { easy: m.easy | 0, medium: m.medium | 0, hard: m.hard | 0 };
+        console.log(`  ${handle} (manual): E${m.easy} M${m.medium} H${m.hard}`);
+      } else {
+        console.log(`  ${handle} (manual): no submissions yet`);
+      }
+      continue;
+    }
     try {
       const stats = await fetchUserStats(handle);
       if (stats) {
@@ -117,6 +137,7 @@ async function main() {
     date: today,
     fetchedAt: new Date().toISOString(),
     counts,
+    ...(manualHandles.size ? { manual: [...manualHandles] } : {}),
     ...(Object.keys(errors).length ? { errors } : {}),
   };
 
@@ -140,7 +161,13 @@ async function main() {
   for (const d of dates) {
     try {
       const snap = await readJson(path.join(SNAP_DIR, `${d}.json`));
-      if (snap) timeline.push({ date: snap.date || d, counts: snap.counts || {} });
+      if (snap) {
+        timeline.push({
+          date: snap.date || d,
+          counts: snap.counts || {},
+          ...(Array.isArray(snap.manual) && snap.manual.length ? { manual: snap.manual } : {}),
+        });
+      }
     } catch {
       // ignore unreadable snapshots
     }
@@ -162,6 +189,8 @@ async function main() {
     for (const u of users) {
       const handle = u.leetcode;
       if (!handle) continue;
+      // Manual users don't use baseline; their submitted values are deltas.
+      if (u.mode === "manual") continue;
       if (!counts[handle]) continue;
       if (baseline.users[handle]) continue;
       baseline.users[handle] = { ...counts[handle], setOn: today };

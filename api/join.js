@@ -1,6 +1,14 @@
 // Vercel Function: POST /api/join
 //
-// Body: { name: string, leetcode: string, inviteCode: string }
+// Body: { name: string, leetcode: string, inviteCode: string, mode?: "auto"|"manual" }
+//
+// `mode` defaults to "auto" (cron auto-fetches their stats from LeetCode).
+// `mode: "manual"` opts the user out of the auto-fetch; they self-report
+// progress via /api/update. Useful for users who share their LeetCode
+// account with someone else.
+//
+// Re-joining with the same handle is allowed and updates name + mode (the
+// invite code is the only auth gate, same as adding a brand-new user).
 //
 // Required env vars (set in Vercel dashboard):
 //   GH_TOKEN     fine-grained PAT scoped to the repo, Contents: read & write
@@ -111,6 +119,7 @@ export default async function handler(req, res) {
   if (!body || typeof body !== "object") return bad(res, 400, "invalid_body");
 
   const { name, leetcode, inviteCode } = body;
+  const mode = body.mode === "manual" ? "manual" : "auto";
 
   if (typeof name !== "string" || name.trim().length === 0 || name.length > NAME_MAX) {
     return bad(res, 400, "invalid_name");
@@ -157,16 +166,32 @@ export default async function handler(req, res) {
 
   if (!Array.isArray(config.users)) config.users = [];
   const lower = leetcode.toLowerCase();
-  if (config.users.some((u) => String(u.leetcode || "").toLowerCase() === lower)) {
-    return res.status(200).json({
-      ok: true,
-      alreadyJoined: true,
-      user: { name: name.trim(), leetcode },
-    });
+  const trimmedName = name.trim();
+  const existingIdx = config.users.findIndex(
+    (u) => String(u.leetcode || "").toLowerCase() === lower
+  );
+  let action;
+  if (existingIdx >= 0) {
+    const existing = config.users[existingIdx];
+    const existingMode = existing.mode === "manual" ? "manual" : "auto";
+    const sameName = (existing.name || "") === trimmedName;
+    if (existingMode === mode && sameName) {
+      return res.status(200).json({
+        ok: true,
+        alreadyJoined: true,
+        user: { name: trimmedName, leetcode, mode },
+      });
+    }
+    const updated = { name: trimmedName, leetcode };
+    if (mode === "manual") updated.mode = "manual";
+    config.users[existingIdx] = updated;
+    action = `update: ${leetcode} -> ${mode}`;
+  } else {
+    const newUser = { name: trimmedName, leetcode };
+    if (mode === "manual") newUser.mode = "manual";
+    config.users.push(newUser);
+    action = `join: ${leetcode}${mode === "manual" ? " (manual)" : ""}`;
   }
-
-  const newUser = { name: name.trim(), leetcode };
-  config.users.push(newUser);
 
   try {
     await writeConfig({
@@ -175,12 +200,16 @@ export default async function handler(req, res) {
       token: ghToken,
       config,
       sha,
-      message: `join: ${leetcode}`,
+      message: action,
     });
   } catch (e) {
     console.error("github write failed:", e);
     return bad(res, 502, "github_write_failed");
   }
 
-  return res.status(200).json({ ok: true, user: newUser });
+  return res.status(200).json({
+    ok: true,
+    user: { name: trimmedName, leetcode, mode },
+    updated: existingIdx >= 0,
+  });
 }

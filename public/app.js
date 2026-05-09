@@ -9,11 +9,15 @@ const ERROR_MESSAGES = {
   invalid_name: "Please enter your name.",
   invalid_handle: "LeetCode usernames can only contain letters, numbers, _ and -.",
   invalid_invite: "Please enter the invite code your friends shared.",
+  invalid_counts: "Counts must be whole numbers between 0 and 10000.",
   bad_invite: "That invite code is not correct.",
   handle_not_found: "We could not find that LeetCode username.",
+  not_joined: "That handle isn't on the leaderboard yet. Use the Join form first.",
+  not_manual_mode: "That user is in auto-tracking mode. Re-join as Manual to use this form.",
   leetcode_unavailable: "LeetCode validation failed; please try again in a minute.",
   github_read_failed: "Could not read the leaderboard config; please try again.",
   github_write_failed: "Could not save your entry; please try again.",
+  config_invalid: "The leaderboard config is malformed; tell the admin.",
   server_misconfigured: "The leaderboard isn't fully set up yet. Tell the admin.",
   invalid_body: "Bad request.",
   invalid_json: "Bad request.",
@@ -32,9 +36,25 @@ async function fetchJson(path, fallback = null) {
 
 // ----- score math -----
 
-function pointsForUser(handle, baseline, latest, weights) {
-  const b = baseline?.users?.[handle];
-  const c = latest?.counts?.[handle];
+function userMode(u) {
+  return u.mode === "manual" ? "manual" : "auto";
+}
+
+function pointsForUser(u, { baseline, latest, manual, weights }) {
+  if (userMode(u) === "manual") {
+    const m = manual?.users?.[u.leetcode];
+    if (!m) return null;
+    const dE = Math.max(0, m.easy   | 0);
+    const dM = Math.max(0, m.medium | 0);
+    const dH = Math.max(0, m.hard   | 0);
+    return {
+      delta: { easy: dE, medium: dM, hard: dH },
+      points: dE * weights.easy + dM * weights.medium + dH * weights.hard,
+      hasBaseline: true,
+    };
+  }
+  const b = baseline?.users?.[u.leetcode];
+  const c = latest?.counts?.[u.leetcode];
   if (!c) return null;
   const ref = b || { easy: 0, medium: 0, hard: 0 };
   const dE = Math.max(0, (c.easy   ?? 0) - (ref.easy   ?? 0));
@@ -47,13 +67,14 @@ function pointsForUser(handle, baseline, latest, weights) {
   };
 }
 
-function rankRows(users, baseline, latest, weights) {
+function rankRows(users, sources) {
   const rows = [];
   for (const u of users) {
-    const score = pointsForUser(u.leetcode, baseline, latest, weights);
+    const score = pointsForUser(u, sources);
     rows.push({
       name: u.name,
       handle: u.leetcode,
+      mode: userMode(u),
       delta: score?.delta || { easy: 0, medium: 0, hard: 0 },
       points: score?.points || 0,
       hasBaseline: score?.hasBaseline || false,
@@ -143,7 +164,7 @@ function deltaCell(n, kind) {
   return el("td", { className: `num ${cls}` }, `${sign}${n}`);
 }
 
-function renderBoard(rows, latest) {
+function renderBoard(rows, latest, manual) {
   const tbody = $("#board-body");
   tbody.innerHTML = "";
   if (rows.length === 0) {
@@ -157,7 +178,12 @@ function renderBoard(rows, latest) {
     tr.appendChild(el("td", { className: "rank" }, String(rank)));
 
     const player = el("div", { className: "player" });
-    player.appendChild(el("div", { className: "name" }, r.name));
+    const nameRow = el("div", { className: "name" });
+    nameRow.appendChild(document.createTextNode(r.name));
+    if (r.mode === "manual") {
+      nameRow.appendChild(el("span", { className: "tag", title: "Manual self-reporting (shared LeetCode account)" }, "manual"));
+    }
+    player.appendChild(nameRow);
     const handleA = el("a", { href: `https://leetcode.com/${r.handle}/`, target: "_blank", rel: "noopener" }, "@" + r.handle);
     player.appendChild(el("div", { className: "handle" }, handleA));
     tr.appendChild(el("td", {}, player));
@@ -169,9 +195,12 @@ function renderBoard(rows, latest) {
     tbody.appendChild(tr);
   });
 
-  if (latest?.fetchedAt) {
-    const when = new Date(latest.fetchedAt).toLocaleString();
-    $("#updated").textContent = `Updated ${when}`;
+  let mostRecent = latest?.fetchedAt ? new Date(latest.fetchedAt).getTime() : 0;
+  for (const u of Object.values(manual?.users || {})) {
+    if (u.updatedAt) mostRecent = Math.max(mostRecent, new Date(u.updatedAt).getTime());
+  }
+  if (mostRecent) {
+    $("#updated").textContent = `Updated ${new Date(mostRecent).toLocaleString()}`;
   }
 }
 
@@ -184,7 +213,6 @@ const CHART_COLORS = [
 
 function buildChart(config, baseline, timeline, users) {
   const canvas = $("#chart");
-  const wrap = $("#chart-wrap");
   const empty = $("#chart-empty");
   const w = config.points || { easy: 1, medium: 3, hard: 5 };
   const points = timeline?.points || [];
@@ -198,21 +226,23 @@ function buildChart(config, baseline, timeline, users) {
   const labels = points.map((p) => p.date);
   const datasets = users
     .map((u, i) => {
+      const isManual = userMode(u) === "manual";
       const base = baseline?.users?.[u.leetcode];
       const data = points.map((p) => {
         const c = p.counts?.[u.leetcode];
         if (!c) return null;
-        const ref = base || { easy: 0, medium: 0, hard: 0 };
+        const ref = isManual ? { easy: 0, medium: 0, hard: 0 } : (base || { easy: 0, medium: 0, hard: 0 });
         const dE = Math.max(0, (c.easy   ?? 0) - (ref.easy   ?? 0));
         const dM = Math.max(0, (c.medium ?? 0) - (ref.medium ?? 0));
         const dH = Math.max(0, (c.hard   ?? 0) - (ref.hard   ?? 0));
         return dE * w.easy + dM * w.medium + dH * w.hard;
       });
       return {
-        label: u.name,
+        label: u.name + (isManual ? " (manual)" : ""),
         data,
         borderColor: CHART_COLORS[i % CHART_COLORS.length],
         backgroundColor: CHART_COLORS[i % CHART_COLORS.length] + "22",
+        borderDash: isManual ? [6, 4] : [],
         spanGaps: true,
         tension: 0.25,
         borderWidth: 2,
@@ -255,10 +285,10 @@ function buildChart(config, baseline, timeline, users) {
   });
 }
 
-// ----- join form -----
+// ----- forms -----
 
-function setMsg(text, kind) {
-  const el = $("#f-msg");
+function setMsg(selector, text, kind) {
+  const el = $(selector);
   el.textContent = text || "";
   el.className = "form-msg" + (kind ? " " + kind : "");
 }
@@ -271,33 +301,84 @@ function bindJoin(onJoined) {
     const name = $("#f-name").value.trim();
     const leetcode = $("#f-handle").value.trim();
     const inviteCode = $("#f-invite").value;
+    const mode = (form.querySelector('input[name="mode"]:checked')?.value === "manual")
+      ? "manual"
+      : "auto";
     if (!name || !leetcode || !inviteCode) {
-      setMsg("Please fill in all three fields.", "err");
+      setMsg("#f-msg", "Please fill in all three fields.", "err");
       return;
     }
     btn.disabled = true;
-    setMsg("Validating with LeetCode…", "");
+    setMsg("#f-msg", "Validating with LeetCode…", "");
     try {
       const r = await fetch("/api/join", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, leetcode, inviteCode }),
+        body: JSON.stringify({ name, leetcode, inviteCode, mode }),
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.ok) {
-        setMsg(ERROR_MESSAGES[j.error] || `Could not join (${r.status}).`, "err");
+        setMsg("#f-msg", ERROR_MESSAGES[j.error] || `Could not join (${r.status}).`, "err");
         return;
       }
       if (j.alreadyJoined) {
-        setMsg(`@${leetcode} is already on the leaderboard.`, "ok");
+        setMsg("#f-msg", `@${leetcode} is already on the leaderboard.`, "ok");
+      } else if (j.updated) {
+        setMsg("#f-msg", `Updated @${leetcode} to ${mode} tracking.`, "ok");
+      } else if (mode === "manual") {
+        setMsg("#f-msg", `Joined as @${leetcode} (manual). Use the "Update my progress" form below to log your problems.`, "ok");
+        $("#f-name").value = "";
+        $("#f-handle").value = "";
+        $("#u-handle").value = leetcode;
       } else {
-        setMsg(`Joined as @${leetcode}. Your stats will appear after the next daily snapshot.`, "ok");
+        setMsg("#f-msg", `Joined as @${leetcode}. Your stats will appear after the next daily snapshot.`, "ok");
         $("#f-name").value = "";
         $("#f-handle").value = "";
       }
       onJoined?.();
     } catch (err) {
-      setMsg("Network error; please try again.", "err");
+      setMsg("#f-msg", "Network error; please try again.", "err");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+function bindUpdate(onUpdated) {
+  const form = $("#update-form");
+  const btn = $("#u-submit");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const leetcode = $("#u-handle").value.trim();
+    const easy = parseInt($("#u-easy").value, 10);
+    const medium = parseInt($("#u-medium").value, 10);
+    const hard = parseInt($("#u-hard").value, 10);
+    const inviteCode = $("#u-invite").value;
+    if (!leetcode || !inviteCode) {
+      setMsg("#u-msg", "Please fill in handle and invite code.", "err");
+      return;
+    }
+    if (![easy, medium, hard].every((n) => Number.isInteger(n) && n >= 0)) {
+      setMsg("#u-msg", "Counts must be non-negative whole numbers.", "err");
+      return;
+    }
+    btn.disabled = true;
+    setMsg("#u-msg", "Saving…", "");
+    try {
+      const r = await fetch("/api/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leetcode, easy, medium, hard, inviteCode }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) {
+        setMsg("#u-msg", ERROR_MESSAGES[j.error] || `Could not update (${r.status}).`, "err");
+        return;
+      }
+      setMsg("#u-msg", `Saved! @${leetcode}: ${easy} easy / ${medium} medium / ${hard} hard.`, "ok");
+      onUpdated?.();
+    } catch (err) {
+      setMsg("#u-msg", "Network error; please try again.", "err");
     } finally {
       btn.disabled = false;
     }
@@ -307,11 +388,12 @@ function bindJoin(onJoined) {
 // ----- main -----
 
 async function load() {
-  const [config, baseline, latest, timeline] = await Promise.all([
+  const [config, baseline, latest, timeline, manual] = await Promise.all([
     fetchJson("/config.json"),
     fetchJson("/data/baseline.json"),
     fetchJson("/data/latest.json"),
     fetchJson("/data/timeline.json"),
+    fetchJson("/data/manual.json"),
   ]);
 
   if (!config) {
@@ -326,13 +408,11 @@ async function load() {
 
   const users = Array.isArray(config.users) ? config.users : [];
   const weights = config.points || { easy: 1, medium: 3, hard: 5 };
-  const rows = rankRows(users, baseline, latest, weights);
-  renderBoard(rows, latest);
+  const rows = rankRows(users, { baseline, latest, manual, weights });
+  renderBoard(rows, latest, manual);
   buildChart(config, baseline, timeline, users);
 }
 
-bindJoin(() => {
-  // The newly joined user won't appear until the next cron tick fetches
-  // their first stats, but the message already explains that.
-});
+bindJoin(() => { load(); });
+bindUpdate(() => { load(); });
 load();
