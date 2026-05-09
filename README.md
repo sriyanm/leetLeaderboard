@@ -107,6 +107,25 @@ next daily snapshot (auto users) or as soon as they submit (manual users).
 Re-joining with the same handle and a different mode is allowed: it just
 flips the user between auto and manual.
 
+### Switching from auto to manual mid-competition
+
+If someone joined as auto, then later realizes they share their LeetCode
+account and want to switch to manual:
+
+1. Open the site, scroll to **Join the competition**.
+2. Re-enter the same name and LeetCode handle they originally joined with.
+3. Pick **Manual** for the tracking mode, paste the invite code, click Join.
+   The endpoint detects the existing entry and flips its mode in
+   `public/config.json`.
+4. Use the **Update my progress** form to submit the count of problems they
+   personally solved during the competition so far. Their score updates
+   immediately on the leaderboard.
+
+Their old auto-tracked chart history (from before the switch) keeps the
+correct points value for those dates — the chart interprets each snapshot
+according to whichever mode the user was in *at that snapshot*, not their
+current mode.
+
 ### Auto mode (default)
 
 The daily cron queries `leetcode.com/graphql` with the user's handle, reads

@@ -226,23 +226,29 @@ function buildChart(config, baseline, timeline, users) {
   const labels = points.map((p) => p.date);
   const datasets = users
     .map((u, i) => {
-      const isManual = userMode(u) === "manual";
+      const isManualNow = userMode(u) === "manual";
       const base = baseline?.users?.[u.leetcode];
       const data = points.map((p) => {
         const c = p.counts?.[u.leetcode];
         if (!c) return null;
-        const ref = isManual ? { easy: 0, medium: 0, hard: 0 } : (base || { easy: 0, medium: 0, hard: 0 });
+        // Per-snapshot mode: a user might have been auto for some snapshots
+        // and manual for others (mid-competition mode switch). Each
+        // snapshot's `manual` array records who was manual at that time.
+        const wasManualThen = Array.isArray(p.manual) && p.manual.includes(u.leetcode);
+        const ref = wasManualThen
+          ? { easy: 0, medium: 0, hard: 0 }
+          : (base || { easy: 0, medium: 0, hard: 0 });
         const dE = Math.max(0, (c.easy   ?? 0) - (ref.easy   ?? 0));
         const dM = Math.max(0, (c.medium ?? 0) - (ref.medium ?? 0));
         const dH = Math.max(0, (c.hard   ?? 0) - (ref.hard   ?? 0));
         return dE * w.easy + dM * w.medium + dH * w.hard;
       });
       return {
-        label: u.name + (isManual ? " (manual)" : ""),
+        label: u.name + (isManualNow ? " (manual)" : ""),
         data,
         borderColor: CHART_COLORS[i % CHART_COLORS.length],
         backgroundColor: CHART_COLORS[i % CHART_COLORS.length] + "22",
-        borderDash: isManual ? [6, 4] : [],
+        borderDash: isManualNow ? [6, 4] : [],
         spanGaps: true,
         tension: 0.25,
         borderWidth: 2,
