@@ -1,0 +1,19 @@
+{
+  "date": "2026-05-09",
+  "fetchedAt": "2026-05-09T08:25:12.168Z",
+  "counts": {
+    "tam_members": {
+      "easy": 4,
+      "medium": 1,
+      "hard": 0
+    },
+    "HoppeanRothbardian": {
+      "easy": 172,
+      "medium": 254,
+      "hard": 10
+    }
+  },
+  "manual": [
+    "tam_members"
+  ]
+}
