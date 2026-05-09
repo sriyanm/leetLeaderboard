@@ -1,0 +1,39 @@
+name: snapshot
+
+on:
+  schedule:
+    # 07:00 UTC daily (~ midnight to 3am US time depending on zone).
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch LeetCode stats
+        run: node scripts/fetch.mjs
+
+      - name: Commit snapshot
+        run: |
+          if [ -n "$(git status --porcelain public/data)" ]; then
+            git config user.name  "leetboard-bot"
+            git config user.email "leetboard-bot@users.noreply.github.com"
+            git add public/data
+            git commit -m "snapshot: $(date -u +%Y-%m-%d)"
+            git push
+          else
+            echo "no changes"
+          fi

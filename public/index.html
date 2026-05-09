@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>LeetCode Friends Leaderboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div class="hero-top">
+          <h1 id="title">LeetCode Friends Leaderboard</h1>
+          <span id="status-pill" class="pill" hidden></span>
+        </div>
+        <p class="hero-sub" id="window">&nbsp;</p>
+        <div class="countdown" id="countdown" hidden>
+          <div class="cd-cell"><span id="cd-days">--</span><label>days</label></div>
+          <div class="cd-cell"><span id="cd-hours">--</span><label>hrs</label></div>
+          <div class="cd-cell"><span id="cd-mins">--</span><label>min</label></div>
+          <div class="cd-cell"><span id="cd-secs">--</span><label>sec</label></div>
+        </div>
+      </header>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Standings</h2>
+          <span class="muted" id="updated">&nbsp;</span>
+        </div>
+        <div class="table-wrap">
+          <table class="board" id="board">
+            <thead>
+              <tr>
+                <th class="rank">#</th>
+                <th>Player</th>
+                <th class="num">Easy</th>
+                <th class="num">Medium</th>
+                <th class="num">Hard</th>
+                <th class="num total">Points</th>
+              </tr>
+            </thead>
+            <tbody id="board-body">
+              <tr class="empty">
+                <td colspan="6">Loading…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="legend muted" id="legend">&nbsp;</p>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Progress over time</h2>
+          <span class="muted">Points since competition start</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart"></canvas>
+        </div>
+        <p class="muted chart-empty" id="chart-empty" hidden>
+          The chart will populate after the first daily snapshot.
+        </p>
+      </section>
+
+      <section class="card join">
+        <div class="card-head">
+          <h2>Join the competition</h2>
+          <span class="muted">Auto-validated against your LeetCode profile</span>
+        </div>
+        <form id="join-form" class="join-form" autocomplete="off">
+          <label>
+            <span>Your name</span>
+            <input id="f-name" name="name" type="text" maxlength="50" required />
+          </label>
+          <label>
+            <span>LeetCode username</span>
+            <input
+              id="f-handle"
+              name="leetcode"
+              type="text"
+              maxlength="40"
+              pattern="[A-Za-z0-9_-]{1,40}"
+              required
+              spellcheck="false"
+              autocapitalize="none"
+            />
+          </label>
+          <label>
+            <span>Invite code</span>
+            <input
+              id="f-invite"
+              name="inviteCode"
+              type="password"
+              maxlength="200"
+              required
+              autocomplete="off"
+            />
+          </label>
+          <button id="f-submit" type="submit">Join</button>
+          <p id="f-msg" class="form-msg" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <footer class="foot muted">
+        Snapshots run daily at 07:00 UTC. New joiners start at 0 points and
+        their stats appear after the next snapshot.
+      </footer>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "startDate": "2026-05-10",
+  "endDate": "2026-08-10",
+  "points": { "easy": 1, "medium": 3, "hard": 5 },
+  "title": "LeetCode Friends Leaderboard",
+  "users": []
+}
