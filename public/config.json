@@ -10,7 +10,8 @@
   "users": [
     {
       "name": "Aksheet",
-      "leetcode": "tam_members"
+      "leetcode": "tam_members",
+      "mode": "manual"
     },
     {
       "name": "Vsauce",
