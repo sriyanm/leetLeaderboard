@@ -12,6 +12,18 @@
       "medium": 132,
       "hard": 4,
       "setOn": "2026-05-10"
+    },
+    "Kcsk_37": {
+      "easy": 7,
+      "medium": 1,
+      "hard": 0,
+      "setOn": "2026-05-11"
+    },
+    "truth101": {
+      "easy": 262,
+      "medium": 346,
+      "hard": 16,
+      "setOn": "2026-05-11"
     }
   }
 }
