@@ -106,6 +106,39 @@
       "manual": [
         "tam_members"
       ]
+    },
+    {
+      "date": "2026-05-13",
+      "counts": {
+        "tam_members": {
+          "easy": 11,
+          "medium": 13,
+          "hard": 1
+        },
+        "HoppeanRothbardian": {
+          "easy": 172,
+          "medium": 254,
+          "hard": 10
+        },
+        "epicgamer1234567890": {
+          "easy": 57,
+          "medium": 132,
+          "hard": 4
+        },
+        "Kcsk_37": {
+          "easy": 7,
+          "medium": 2,
+          "hard": 0
+        },
+        "truth101": {
+          "easy": 263,
+          "medium": 349,
+          "hard": 17
+        }
+      },
+      "manual": [
+        "tam_members"
+      ]
     }
   ]
 }
