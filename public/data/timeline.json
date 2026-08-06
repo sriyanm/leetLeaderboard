@@ -3326,6 +3326,45 @@
         "tam_members",
         "rdubey78"
       ]
+    },
+    {
+      "date": "2026-08-06",
+      "counts": {
+        "tam_members": {
+          "easy": 85,
+          "medium": 230,
+          "hard": 45
+        },
+        "HoppeanRothbardian": {
+          "easy": 192,
+          "medium": 280,
+          "hard": 10
+        },
+        "epicgamer1234567890": {
+          "easy": 57,
+          "medium": 132,
+          "hard": 4
+        },
+        "Kcsk_37": {
+          "easy": 36,
+          "medium": 44,
+          "hard": 6
+        },
+        "truth101": {
+          "easy": 276,
+          "medium": 368,
+          "hard": 21
+        },
+        "whrui": {
+          "easy": 41,
+          "medium": 118,
+          "hard": 17
+        }
+      },
+      "manual": [
+        "tam_members",
+        "rdubey78"
+      ]
     }
   ]
 }
