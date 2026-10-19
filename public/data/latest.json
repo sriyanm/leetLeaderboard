@@ -1,6 +1,6 @@
 {
-  "date": "2026-10-18",
-  "fetchedAt": "2026-10-18T11:55:13.035Z",
+  "date": "2026-10-19",
+  "fetchedAt": "2026-10-19T14:17:25.085Z",
   "counts": {
     "tam_members": {
       "easy": 85,
@@ -8,7 +8,7 @@
       "hard": 45
     },
     "HoppeanRothbardian": {
-      "easy": 206,
+      "easy": 207,
       "medium": 302,
       "hard": 16
     },
@@ -25,7 +25,7 @@
     "truth101": {
       "easy": 282,
       "medium": 409,
-      "hard": 44
+      "hard": 45
     },
     "whrui": {
       "easy": 45,
