@@ -1,6 +1,6 @@
 {
-  "date": "2026-10-19",
-  "fetchedAt": "2026-10-19T14:17:25.085Z",
+  "date": "2026-10-20",
+  "fetchedAt": "2026-10-20T12:29:42.847Z",
   "counts": {
     "tam_members": {
       "easy": 85,
@@ -23,13 +23,13 @@
       "hard": 7
     },
     "truth101": {
-      "easy": 282,
-      "medium": 409,
+      "easy": 284,
+      "medium": 411,
       "hard": 45
     },
     "whrui": {
-      "easy": 45,
-      "medium": 133,
+      "easy": 46,
+      "medium": 134,
       "hard": 20
     }
   },
