@@ -1,6 +1,6 @@
 {
-  "date": "2026-10-31",
-  "fetchedAt": "2026-10-31T13:15:44.468Z",
+  "date": "2026-11-01",
+  "fetchedAt": "2026-11-01T13:59:42.316Z",
   "counts": {
     "tam_members": {
       "easy": 85,
@@ -8,8 +8,8 @@
       "hard": 45
     },
     "HoppeanRothbardian": {
-      "easy": 208,
-      "medium": 320,
+      "easy": 209,
+      "medium": 321,
       "hard": 20
     },
     "epicgamer1234567890": {
@@ -28,9 +28,9 @@
       "hard": 45
     },
     "whrui": {
-      "easy": 48,
-      "medium": 139,
-      "hard": 22
+      "easy": 49,
+      "medium": 141,
+      "hard": 23
     }
   },
   "manual": [

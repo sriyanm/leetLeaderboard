@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-01",
+  "fetchedAt": "2026-11-01T13:59:42.316Z",
+  "counts": {
+    "tam_members": {
+      "easy": 85,
+      "medium": 230,
+      "hard": 45
+    },
+    "HoppeanRothbardian": {
+      "easy": 209,
+      "medium": 321,
+      "hard": 20
+    },
+    "epicgamer1234567890": {
+      "easy": 57,
+      "medium": 133,
+      "hard": 4
+    },
+    "Kcsk_37": {
+      "easy": 36,
+      "medium": 45,
+      "hard": 7
+    },
+    "truth101": {
+      "easy": 286,
+      "medium": 413,
+      "hard": 45
+    },
+    "whrui": {
+      "easy": 49,
+      "medium": 141,
+      "hard": 23
+    }
+  },
+  "manual": [
+    "tam_members",
+    "rdubey78"
+  ]
+}
