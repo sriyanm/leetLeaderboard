@@ -1,6 +1,6 @@
 {
-  "date": "2026-11-01",
-  "fetchedAt": "2026-11-01T13:59:42.316Z",
+  "date": "2026-11-02",
+  "fetchedAt": "2026-11-02T16:46:29.163Z",
   "counts": {
     "tam_members": {
       "easy": 85,
@@ -29,8 +29,8 @@
     },
     "whrui": {
       "easy": 49,
-      "medium": 141,
-      "hard": 23
+      "medium": 144,
+      "hard": 24
     }
   },
   "manual": [
